@@ -1,6 +1,7 @@
 <?php
 // set a function to output stream data
-function stream($event, $obj) {
+function stream($event, $obj)
+{
     echo "event: $event\ndata:".json_encode($obj)."\n\n";
 	@flush();
 	@ob_flush();
@@ -10,9 +11,13 @@ function stream($event, $obj) {
     return;
 }
 
-// setup buffering of backend
-@ini_set('implicit_flush',1);
-@ob_end_clean();
+function endSSE()
+{
+	echo "event:message\ndata: END-OF-STREAM\n\n"; // Give browser a signal to stop re-opening connection
+	ob_get_flush();
+	flush();
+	sleep(1);
+}
 
 // set timeout
 @ini_set('default_socket_timeout',-1);
@@ -37,10 +42,23 @@ if (!$shm_id) {
 	exit;
 }
 
+// read messages from shared memory
+$data = rtrim(shmop_read($shm_id, 0, shmop_size($shm_id)), "\0");
+$rec = json_decode($data, true);
+if ($rec) {
+	foreach($rec as $msg) {
+		// send previous messages
+		stream('message', $msg);
+		$flag = true;
+
+		if (connection_aborted()) endSSE();
+	}
+}
 
 // Welcome message
 $init = array('user' => 'SYSTEM', 'message' => 'Welcome to the system!');
 stream('message', $init);
+
 
 $c_cnt = 0;
 $idle = 0;
@@ -57,7 +75,7 @@ while(1) {
 		foreach($rec as $msg) {
 			// send new messages and update last message time
 			$mdt = strtotime($msg['timestamp']);
-			if (strtotime($msg['timestamp']) > $dt || $first) {
+			if (strtotime($msg['timestamp']) > $dt) {
 				stream('message', $msg);
 				$flag = true;
 				$tdt = $mdt > $tdt ? $mdt : $tdt;
@@ -65,7 +83,7 @@ while(1) {
 		}
 		$dt = $tdt;
 		$first = false;
-		if (connection_aborted()) break;
+		if (connection_aborted()) endSSE();
 		if (!$flag) $idle++;
 	} else $idle++;
 	
@@ -79,8 +97,4 @@ while(1) {
     usleep(1000 * 1000 / 10);
 }
 
-echo "event:message\ndata: END-OF-STREAM\n\n"; // Give browser a signal to stop re-opening connection
-ob_get_flush();
-flush();
-sleep(1);
 ?>
