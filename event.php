@@ -36,13 +36,13 @@ error_log(print_r($shm_id,true));
 
 if (!$shm_id) {
 	// failed open shared memory
-	
 	http_response_code(500);
 	echo "data: Somthing went wrong!";
 	exit;
 }
 
 // read messages from shared memory
+ob_start();
 $data = rtrim(shmop_read($shm_id, 0, shmop_size($shm_id)), "\0");
 $rec = json_decode($data, true);
 if ($rec) {
@@ -50,15 +50,15 @@ if ($rec) {
 		// send previous messages
 		stream('message', $msg);
 		$flag = true;
-
 		if (connection_aborted()) endSSE();
 	}
 }
 
+
 // Welcome message
 $init = array('user' => 'SYSTEM', 'message' => 'Welcome to the system!');
 stream('message', $init);
-
+if (connection_aborted()) endSSE();
 
 $c_cnt = 0;
 $idle = 0;
