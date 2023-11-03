@@ -27,7 +27,9 @@ if (!$shm_id) {
 }
 
 // build message object
-$data = array('user' => $_POST['user'], 'message' => $_POST['msg'], 'timestamp' => date('Y-m-d H:i:s'));
+$data = array('user' => filter_input(INPUT_POST, 'user', FILTER_SANITIZE_SPECIAL_CHARS),
+	'message' => filter_input(INPUT_POST, 'msg', FILTER_SANITIZE_SPECIAL_CHARS),
+	'timestamp' => date('Y-m-d H:i:s'));
 
 $ori_str = rtrim(shmop_read($shm_id, 0, shmop_size($shm_id)), "\0");
 
