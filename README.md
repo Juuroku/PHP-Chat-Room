@@ -6,7 +6,7 @@ This is a simple chat room website using Server-sent Events and Shared Memory Fu
  - Clone the project to your local file system.
  - Set the root of the web to the path of the project.
  - Setup PHP-FPM. (For example, edit [nginx.conf](https://www.nginx.com/resources/wiki/start/topics/examples/phpfcgi/#connecting-nginx-to-php-fpm))
- - Start the service. (For example: `sudo service nginx start`)
+ - Start the service. (For example: `sudo service nginx start` and `sudo service php7.4-fpm start`)
 
 ## Usage
  - Open the url in the browser (For example: `localhost`) to access the chat room.
@@ -21,6 +21,15 @@ This is a simple chat room website using Server-sent Events and Shared Memory Fu
  - Nginx 1.18
  - PHP-FPM 7.4
  
+### Nginx Configuration Example
+```nginx
+server {
+	...
+	gzip off;
+	proxy_buffering off;
+}
+```
+
 ## References
  - [Server-sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events): Keep the connection and send new messages clients.
  - [EventSource](https://developer.mozilla.org/en-US/docs/Web/API/EventSource): Keep the connection and receive new messages from the server.
